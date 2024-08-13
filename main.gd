@@ -1,6 +1,7 @@
 extends Node
 
 @export var rock_scene : PackedScene
+@export var enemy_scene : PackedScene
 
 var screensize = Vector2.ZERO
 var level = 0
@@ -11,6 +12,19 @@ var playing = false
 func _ready():
 	randomize()
 	screensize = get_viewport().get_visible_rect().size
+
+func _input(event):
+	if event.is_action_pressed("pause"):
+		if not playing:
+			return
+		get_tree().paused = not get_tree().paused
+		var message = $HUD/VBoxContainer/Message
+		if get_tree().paused:
+			message.text = "Paused"
+			message.show()
+		else:
+			message.text = ""
+			message.hide()
 
 func new_game():
 	# remove any old rocks from previous game
@@ -32,6 +46,7 @@ func new_level():
 	$HUD.show_message("Wave %s" % level)
 	for i in level:
 		spawn_rock(3)
+	$EnemyTimer.start(randf_range(5, 10))
 
 func spawn_rock(size, pos=null, vel=null):
 	if pos == null:
@@ -54,7 +69,6 @@ func _on_rock_exploded(size, radius, pos, vel):
 		var newvel = dir * vel.length() * 1.1
 		spawn_rock(size - 1, newpos, newvel)
 
-
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(_delta):
 	if not playing:
@@ -62,3 +76,9 @@ func _process(_delta):
 	if get_tree().get_nodes_in_group("rocks").size() == 0:
 		new_level()
 
+
+func _on_enemy_timer_timeout():
+	var e = enemy_scene.instantiate()
+	add_child(e)
+	e.target = $Player
+	$EnemyTimer.start(randf_range(20, 40))
