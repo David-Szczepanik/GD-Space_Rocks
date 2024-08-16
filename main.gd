@@ -12,6 +12,8 @@ var playing = false
 func _ready():
 	randomize()
 	screensize = get_viewport().get_visible_rect().size
+	for i in 3:
+		spawn_rock(3)
 
 func _input(event):
 	if event.is_action_pressed("pause"):

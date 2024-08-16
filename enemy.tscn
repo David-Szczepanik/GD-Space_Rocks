@@ -4,6 +4,7 @@
 [ext_resource type="Texture2D" uid="uid://tebeno6q62j0" path="res://assets/enemy_saucer.png" id="1_nqa2e"]
 [ext_resource type="PackedScene" uid="uid://c0q5g27np3iro" path="res://explosion.tscn" id="2_2qs3b"]
 [ext_resource type="PackedScene" uid="uid://cdwtq3cbxebl" path="res://enemy_paths.tscn" id="2_ngbj4"]
+[ext_resource type="PackedScene" uid="uid://bea7cw4iaavgr" path="res://enemy_bullet.tscn" id="2_y308y"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_w53ow"]
 radius = 40.0
@@ -18,38 +19,20 @@ tracks/0/path = NodePath("Sprite2D:modulate")
 tracks/0/interp = 1
 tracks/0/loop_wrap = true
 tracks/0/keys = {
-"times": PackedFloat32Array(0, 0.1, 0.2),
-"transitions": PackedFloat32Array(1, 1, 1),
+"times": PackedFloat32Array(0, 0.04, 0.08, 0.12, 0.16, 0.2, 0.24),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1),
 "update": 0,
-"values": [Color(1, 0, 0, 1), Color(1, 0, 0, 1), Color(1, 1, 1, 1)]
-}
-
-[sub_resource type="Animation" id="Animation_qv0x6"]
-length = 0.001
-tracks/0/type = "value"
-tracks/0/imported = false
-tracks/0/enabled = true
-tracks/0/path = NodePath("Sprite2D:modulate")
-tracks/0/interp = 1
-tracks/0/loop_wrap = true
-tracks/0/keys = {
-"times": PackedFloat32Array(0),
-"transitions": PackedFloat32Array(1),
-"update": 0,
-"values": [Color(1, 0, 0, 1)]
+"values": [Color(1, 1, 1, 1), Color(1, 0, 0, 1), Color(1, 1, 1, 1), Color(1, 0, 0, 1), Color(1, 1, 1, 1), Color(1, 0, 0, 1), Color(1, 1, 1, 1)]
 }
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_48wub"]
 _data = {
-"RESET": SubResource("Animation_qv0x6"),
 "flash": SubResource("Animation_m76fh")
 }
 
 [node name="Enemy" type="Area2D" groups=["enemies"]]
 script = ExtResource("1_03wx0")
-
-[node name="Explosion" parent="." instance=ExtResource("2_2qs3b")]
-visible = false
+bullet_scene = ExtResource("2_y308y")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 modulate = Color(1, 0, 0, 1)
@@ -66,8 +49,12 @@ libraries = {
 "": SubResource("AnimationLibrary_48wub")
 }
 
+[node name="Explosion" parent="." instance=ExtResource("2_2qs3b")]
+visible = false
+
 [node name="GunCooldown" type="Timer" parent="."]
 wait_time = 1.5
-one_shot = true
+autostart = true
 
+[connection signal="body_entered" from="." to="." method="_on_body_entered"]
 [connection signal="timeout" from="GunCooldown" to="." method="_on_gun_cooldown_timeout"]
