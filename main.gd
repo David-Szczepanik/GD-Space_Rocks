@@ -34,21 +34,24 @@ func new_game():
 	level = 0
 	score = 0
 	$HUD.update_score(score)
-	$HUD.show_message("Get Ready!")
 	$Player.reset()
+	$HUD.show_message("Get Ready!")
 	await $HUD/Timer.timeout
 	playing = true
+	$Music.play()
 
 func game_over():
 	playing = false
 	$HUD.game_over()
+	$Music.stop()
 
 func new_level():
+	$LevelupSound.play()
+	$EnemyTimer.start(randf_range(5, 10))
 	level += 1
 	$HUD.show_message("Wave %s" % level)
 	for i in level:
 		spawn_rock(3)
-	$EnemyTimer.start(randf_range(5, 10))
 
 func spawn_rock(size, pos=null, vel=null):
 	if pos == null:
@@ -63,6 +66,7 @@ func spawn_rock(size, pos=null, vel=null):
 	r.exploded.connect(self._on_rock_exploded)
 
 func _on_rock_exploded(size, radius, pos, vel):
+	$ExplosionSound.play()
 	if size <= 1:
 		return
 	for offset in [-1, 1]:
@@ -73,11 +77,10 @@ func _on_rock_exploded(size, radius, pos, vel):
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(_delta):
-	if not playing:
+	if !playing:
 		return
 	if get_tree().get_nodes_in_group("rocks").size() == 0:
 		new_level()
-
 
 func _on_enemy_timer_timeout():
 	var e = enemy_scene.instantiate()

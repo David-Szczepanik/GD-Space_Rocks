@@ -4,9 +4,12 @@ extends RigidBody2D
 @export var fire_rate = 0.25
 @export var engine_power = 500
 @export var spin_power = 8000
+@export var max_shield = 100.0
+@export var shield_regen = 5.0
 
 signal lives_changed
 signal dead
+signal shield_changed
 
 var thrust = Vector2.ZERO
 var rotation_dir = 0
@@ -14,6 +17,7 @@ var screensize = Vector2.ZERO
 var can_shoot = true
 var reset_pos = false
 var lives = 0: set = set_lives
+var shield = 0: set = set_shield
 
 enum {INIT, ALIVE, INVULNERABLE, DEAD}
 var state = INIT
@@ -22,6 +26,14 @@ func _ready():
 	change_state(ALIVE)
 	screensize = get_viewport_rect().size
 	$GunCooldown.wait_time = fire_rate
+
+func set_shield(value):
+	value = min(value, max_shield)
+	shield = value
+	shield_changed.emit(shield / max_shield)
+	if shield <= 0:
+		lives -= 1
+		explode()
 
 func change_state(new_state):
 	match new_state:
@@ -40,6 +52,7 @@ func change_state(new_state):
 			$Sprite2D.hide()
 			linear_velocity = Vector2.ZERO
 			dead.emit()
+			$EngineSound.stop()
 	state = new_state
 
 func set_lives(value):
@@ -49,6 +62,7 @@ func set_lives(value):
 		change_state(DEAD)
 	else:
 		change_state(INVULNERABLE)
+	shield = max_shield
 
 func reset():
 	reset_pos = true
@@ -65,10 +79,11 @@ func _integrate_forces(physics_state):
 		physics_state.transform.origin = screensize / 2
 		reset_pos = false
 
-func _process(_delta):
+func _process(delta):
 	get_input()
 	if Input.is_action_pressed("shoot") and can_shoot:
 		shoot()
+	shield += shield_regen * delta
 
 func get_input():
 	thrust = Vector2.ZERO
@@ -76,9 +91,14 @@ func get_input():
 		return
 	if Input.is_action_pressed("thrust"):
 		thrust = transform.x * engine_power
+		if not $EngineSound.playing:
+			$EngineSound.play()
+	else:
+		$EngineSound.stop()
 	rotation_dir = Input.get_axis("rotate_left", "rotate_right")
 	if Input.is_action_pressed("shoot") and can_shoot:
 		shoot()
+	
 
 func _physics_process(_delta):
 	constant_force = thrust
@@ -92,20 +112,18 @@ func shoot():
 	var b = bullet_scene.instantiate()
 	get_tree().root.add_child(b)
 	b.start($Muzzle.global_transform)
-
+	$LaserSound.play()
 
 func _on_gun_cooldown_timeout():
 	can_shoot = true
-
 
 func _on_invulnerability_timer_timeout():
 	change_state(ALIVE)
 
 func _on_body_entered(body):
 	if body.is_in_group("rocks"):
+		shield -= body.size * 25
 		body.explode()
-		lives -= 1
-		explode()
 
 func explode():
 	$Explosion.show()

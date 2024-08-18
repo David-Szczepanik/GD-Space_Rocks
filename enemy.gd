@@ -6,19 +6,20 @@ extends Area2D
 @export var health = 3
 @export var bullet_spread = 0.2
 
-var follow = PathFollow2D.new()
+var follow
 var target = null
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	$Sprite2D.frame = randi() % 3
-	var path = $EnemyPaths.get_children() [randi() % $EnemyPaths.get_child_count()]
+	var path = $EnemyPaths.get_children()[randi() % $EnemyPaths.get_child_count()]
+	follow = PathFollow2D.new()
 	path.add_child(follow)
 	follow.loop = false
 
-func _physics_process(_delta):
-	rotation += deg_to_rad(rotation_speed) * _delta
-	follow.progress += speed * _delta
+func _physics_process(delta):
+	rotation += deg_to_rad(rotation_speed) * delta
+	follow.progress += speed * delta
 	position = follow.global_position
 	if follow.progress_ratio >= 1:
 		queue_free()
@@ -29,8 +30,10 @@ func shoot():
 	var b = bullet_scene.instantiate()
 	get_tree().root.add_child(b)
 	b.start(global_position, dir)
-
+	$LaserSound.play()
+	
 func explode():
+	$ExplosionSound.play()
 	speed = 0
 	$GunCooldown.stop()
 	$CollisionShape2D.set_deferred("disabled", true)
@@ -39,10 +42,6 @@ func explode():
 	$Explosion/AnimationPlayer.play("explosion")
 	await $Explosion/AnimationPlayer.animation_finished
 	queue_free()
-
-# Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(_delta):
-	pass
 
 func _on_gun_cooldown_timeout():
 	# shoot()
@@ -63,3 +62,4 @@ func _on_body_entered(body):
 	if body.is_in_group("rocks"):
 		return
 	explode()
+	body.shield -= 50
