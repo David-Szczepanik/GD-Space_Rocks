@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3 uid="uid://oijholdp8qhs"]
+[gd_scene load_steps=14 format=3 uid="uid://oijholdp8qhs"]
 
 [ext_resource type="Script" path="res://enemy.gd" id="1_03wx0"]
 [ext_resource type="Texture2D" uid="uid://tebeno6q62j0" path="res://assets/enemy_saucer.png" id="1_nqa2e"]
@@ -7,6 +7,7 @@
 [ext_resource type="PackedScene" uid="uid://bea7cw4iaavgr" path="res://enemy_bullet.tscn" id="2_y308y"]
 [ext_resource type="AudioStream" uid="uid://qubv1unyb5qa" path="res://assets/sounds/enemy_laser.wav" id="6_ls477"]
 [ext_resource type="AudioStream" uid="uid://c3jtmut1drtwv" path="res://assets/sounds/explosion.wav" id="7_twqlw"]
+[ext_resource type="Texture2D" uid="uid://ciin07lrvr1f8" path="res://assets/corona.png" id="8_oohor"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_w53ow"]
 radius = 40.0
@@ -32,11 +33,19 @@ _data = {
 "flash": SubResource("Animation_m76fh")
 }
 
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_lvi3l"]
+blend_mode = 1
+
+[sub_resource type="Curve" id="Curve_yokox"]
+_data = [Vector2(0, 1), 0.0, 0.0, 0, 0, Vector2(1, 0), 0.0, 0.0, 0, 0]
+point_count = 2
+
 [node name="Enemy" type="Area2D" groups=["enemies"]]
 script = ExtResource("1_03wx0")
 bullet_scene = ExtResource("2_y308y")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
+visible = false
 texture = ExtResource("1_nqa2e")
 hframes = 3
 
@@ -64,6 +73,18 @@ volume_db = -16.58
 [node name="LaserSound" type="AudioStreamPlayer" parent="."]
 stream = ExtResource("6_ls477")
 volume_db = -13.65
+
+[node name="CPUParticles2D" type="CPUParticles2D" parent="."]
+show_behind_parent = true
+material = SubResource("CanvasItemMaterial_lvi3l")
+amount = 2
+texture = ExtResource("8_oohor")
+emission_shape = 1
+emission_sphere_radius = 25.0
+gravity = Vector2(0, 0)
+scale_amount_min = 0.1
+scale_amount_max = 0.15
+scale_amount_curve = SubResource("Curve_yokox")
 
 [connection signal="body_entered" from="." to="." method="_on_body_entered"]
 [connection signal="timeout" from="GunCooldown" to="." method="_on_gun_cooldown_timeout"]
